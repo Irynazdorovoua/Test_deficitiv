@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Розквітай · Аналіз дефіцитів — День 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F9EFF0; --ink:#3D2733; --ink-soft:#7A6270;
+    --rose:#B4566C; --rose-soft:#E7C3CC; --sage:#7C9082;
+    --gold:#C9A227; --wheat:#C9A45C; --blue:#7A87A8;
+    --card:#FFFFFF; --radius:22px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Manrope',system-ui,sans-serif;
+    background:var(--bg); color:var(--ink);
+    min-height:100vh; display:flex; justify-content:center; line-height:1.55;
+  }
+  .app{width:100%;max-width:440px;padding:22px 18px 44px;display:flex;flex-direction:column;min-height:100vh}
+  .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--rose);font-weight:700;text-align:center}
+  h1,h2{font-family:'Cormorant Garamond',serif;font-weight:600;line-height:1.15}
+  h1{font-size:32px;text-align:center;margin:6px 0 4px}
+  .sub{text-align:center;color:var(--ink-soft);font-size:14px;max-width:330px;margin:0 auto}
+  .flower-wrap{display:flex;justify-content:center;margin:14px 0 4px}
+  .petal{fill:#EFDCE1;transition:fill .6s ease}
+  .petal.bloomed{fill:var(--rose)}
+  .flower-core{fill:var(--gold)}
+  .screen{display:none;flex-direction:column;flex:1}
+  .screen.active{display:flex;animation:fadeUp .4s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce){.screen.active{animation:none}.petal{transition:none}}
+  .card{background:var(--card);border-radius:var(--radius);padding:22px 20px;box-shadow:0 10px 30px rgba(61,39,51,.07);margin-top:14px}
+  .g-count{font-size:11.5px;letter-spacing:.18em;color:var(--rose);font-weight:700;text-transform:uppercase;margin-bottom:4px}
+  .g-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;margin-bottom:4px}
+  .g-hint{font-size:12.5px;color:var(--ink-soft);margin-bottom:14px}
+  .sym{
+    display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;
+    background:#fff;border:1.5px solid #F0E2E6;border-radius:14px;
+    padding:11px 13px;margin-bottom:8px;cursor:pointer;transition:all .16s;
+    font-family:'Manrope';font-size:13.8px;font-weight:500;color:var(--ink);line-height:1.4;
+  }
+  .sym:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  .sym .mark{
+    flex:0 0 20px;height:20px;border-radius:7px;border:1.5px solid var(--rose-soft);
+    display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;transition:all .16s;margin-top:1px;
+  }
+  .sym.picked{border-color:var(--rose);background:#FDF6F8}
+  .sym.picked .mark{background:var(--rose);border-color:var(--rose)}
+  .sym .rare{display:block;font-size:11px;color:var(--ink-soft);font-weight:400;margin-top:1px}
+  .none-note{text-align:center;font-size:12px;color:var(--ink-soft);margin-top:8px}
+  .btn{margin-top:14px;width:100%;padding:15px;border:none;border-radius:16px;background:var(--ink);color:#fff;
+    font-family:'Manrope';font-size:15.5px;font-weight:600;cursor:pointer;transition:transform .15s}
+  .btn:active{transform:scale(.98)}
+  .btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  .btn.ghost{background:transparent;color:var(--ink-soft);font-weight:500;padding:10px;margin-top:6px}
+  .nav-row{display:flex;gap:10px;margin-top:16px}
+  .nav-row .btn{margin-top:0}
+  .btn.back{background:#EFE3E6;color:var(--ink);flex:0 0 80px}
+  /* результати */
+  .warn{background:var(--rose);color:#fff;border-radius:18px;padding:18px 18px;margin-top:14px;font-size:13px}
+  .warn b{display:block;font-size:13px;letter-spacing:.06em;margin-bottom:6px}
+  .hyp{background:#fff;border-radius:18px;padding:18px 18px;margin-top:12px;box-shadow:0 8px 24px rgba(61,39,51,.06);border-left:6px solid var(--rose)}
+  .hyp.mid{border-left-color:var(--wheat)}
+  .hyp.low{border-left-color:#DCC9CF}
+  .hyp.thy{border-left-color:var(--blue)}
+  .hyp-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .hyp-name{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:600}
+  .hyp-level{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--rose);white-space:nowrap}
+  .hyp.mid .hyp-level{color:var(--wheat)}
+  .hyp.low .hyp-level{color:#B99AA5}
+  .hyp.thy .hyp-level{color:var(--blue)}
+  .hyp-syms{font-size:12px;color:var(--ink-soft);margin-top:6px}
+  .hyp-row{margin-top:10px;font-size:13px}
+  .hyp-row b{color:var(--rose);font-size:11px;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:2px}
+  .hyp.thy .hyp-row b{color:var(--blue)}
+  .divider{height:1px;background:#F0E2E6;margin:16px 0}
+  .footer-note{margin-top:22px;font-size:11.5px;color:var(--ink-soft);text-align:center;line-height:1.5}
+  .hint{font-size:13px;color:var(--ink-soft);margin-top:12px;text-align:center}
+  .intro-warn{background:#F1E6DE;border-radius:14px;padding:13px 15px;margin-top:12px;font-size:12.5px;color:var(--ink)}
+  .picked-total{text-align:center;font-size:12.5px;color:var(--ink-soft);margin-top:8px}
+  .picked-total b{color:var(--rose)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ІНТРО -->
+  <section class="screen active" id="s-intro">
+    <div class="eyebrow">Розквітай · День 3 · Читаємо сигнали тіла</div>
+    <h1>Аналіз дефіцитів</h1>
+    <p class="sub">7 груп симптомів · познач усе, що про тебе · в кінці — твої гіпотези і які аналізи їх перевіряють</p>
+    <div class="flower-wrap">
+      <svg width="110" height="110" viewBox="0 0 120 120" aria-hidden="true"><g id="petals0"></g><circle class="flower-core" cx="60" cy="60" r="11"/></svg>
+    </div>
+    <div class="card">
+      <p style="font-size:14px"><b>Як проходити:</b> у кожній групі познач симптоми, які <b>тривають тижнями</b> — не разові. Нічого не впізнала в групі? Просто тисни «Далі» — це теж інформація.</p>
+      <p style="font-size:14px;margin-top:10px">Тут будуть і маловідомі сигнали — кровоточиві ясна, посмикування повіки, тяга гризти лід. Тіло говорить дрібницями 🌸</p>
+    </div>
+    <div class="intro-warn">⚠️ <b>Дві чесні рамки:</b> результат — це <b>гіпотези, а не діагноз</b> (їх перевіряють аналізи з Дня 7 і лікар). І якщо якийсь симптом з'явився <b>різко</b> або швидко наростає — це привід до лікаря одразу, без тестів.</div>
+    <button class="btn" style="margin-top:18px" onclick="startTest()">Почати</button>
+  </section>
+
+  <!-- ГРУПИ -->
+  <section class="screen" id="s-group">
+    <div class="flower-wrap" style="margin:0 0 2px">
+      <svg width="80" height="80" viewBox="0 0 120 120" aria-hidden="true"><g id="petals1"></g><circle class="flower-core" cx="60" cy="60" r="11"/></svg>
+    </div>
+    <div class="card">
+      <div class="g-count" id="gCount"></div>
+      <div class="g-title" id="gTitle"></div>
+      <div class="g-hint" id="gHint"></div>
+      <div id="symList"></div>
+      <div class="none-note">нічого не впізнала — сміливо «Далі»</div>
+    </div>
+    <div class="picked-total">Позначено всього: <b id="totalPicked">0</b></div>
+    <div class="nav-row">
+      <button class="btn back" id="btnBack" onclick="prevG()">←</button>
+      <button class="btn" id="btnNext" onclick="nextG()">Далі</button>
+    </div>
+  </section>
+
+  <!-- РЕЗУЛЬТАТ -->
+  <section class="screen" id="s-result">
+    <div class="eyebrow">Твої гіпотези</div>
+    <h1 style="font-size:28px">Що може стояти за симптомами</h1>
+    <div class="flower-wrap"><svg width="100" height="100" viewBox="0 0 120 120" aria-hidden="true"><g id="petals2"></g><circle class="flower-core" cx="60" cy="60" r="11"/></svg></div>
+    <div class="warn">
+      <b>⚠️ ЦЕ ГІПОТЕЗИ, А НЕ ДІАГНОЗ</b>
+      У одного симптому може бути багато причин. Будь ласка, не купуй добавки за цим тестом: дефіцити підтверджуються аналізами (перелік і гайд — у День 7), а дозування підбирає лікар. Мета тесту — щоб ти прийшла до лікаря з готовими запитаннями.
+    </div>
+    <div id="results"></div>
+    <div class="hint" id="resHint"></div>
+    <button class="btn" style="margin-top:16px" onclick="window.scrollTo({top:0})">↑ Вгору — зробити скріншот 📸</button>
+    <button class="btn ghost" onclick="restart()">Пройти ще раз</button>
+    <p class="footer-note">«Розквітай» — освітня програма, не медична консультація. Скріншот результату — чудова основа для «Портрета» (День 7) і розмови з лікарем.</p>
+  </section>
+
+</div>
+
+<script>
+/* ---------- ДАНІ ---------- */
+/* Ключі напрямів: fe, d, b12, mg, c, fat, prot, zn, thy, h2o */
+const GROUPS = [
+ { t:"Енергія і сон", h:"як ти прокидаєшся і тримаєш день", syms:[
+   {s:"Прокидаюся втомленою навіть після 8 годин сну", w:{fe:2,d:1,thy:1}},
+   {s:"Енергія різко падає вдень — рятуюся кавою", w:{fe:1,d:1,h2o:1}},
+   {s:"Задишка або серцебиття на звичайних сходах", w:{fe:2}},
+   {s:"Увечері «крутить» ноги, хочеться ними рухати", r:"синдром неспокійних ніг", w:{fe:2,mg:1}},
+   {s:"Важко засинаю, сон поверхневий, часті пробудження", w:{mg:2}},
+   {s:"Мерзну, коли іншим нормально — руки й ноги крижані", w:{thy:2,fe:1}},
+ ]},
+ { t:"Волосся, нігті, шкіра", h:"те, що видно у дзеркалі", syms:[
+   {s:"Волосся випадає помітно більше, ніж зазвичай", w:{fe:2,thy:1,prot:1,zn:1}},
+   {s:"Нігті ламкі, шаруються", w:{fe:1,prot:1,fat:1}},
+   {s:"Білі плямки або смужки на нігтях", w:{zn:2}},
+   {s:"Шкіра суха, скільки б не мастила кремом", w:{fat:2,d:1,h2o:1}},
+   {s:"«Гусяча шкіра» на плечах і стегнах, що не проходить", w:{fat:2,c:1}},
+   {s:"Лупа або суха, свербляча шкіра голови", w:{fat:1,zn:1}},
+   {s:"Тріщини на п'ятах, шорсткі сухі лікті", w:{fat:2}},
+ ]},
+ { t:"Рот і обличчя", h:"найнедооціненіші сигнали — придивись", syms:[
+   {s:"Ясна кровоточать при чищенні зубів", r:"класичний сигнал нестачі вітаміну С", w:{c:3}},
+   {s:"Заїди — тріщинки в кутиках рота", w:{b12:2,fe:1}},
+   {s:"Синці з'являються легко, від найменшого дотику", w:{c:2}},
+   {s:"Язик став гладким, яскравим, іноді пече", w:{b12:3,fe:1}},
+   {s:"Шкіра бліда; внутрішній бік повіки — блідо-рожевий", w:{fe:2}},
+   {s:"Порідшала зовнішня третина брів", r:"маловідомий сигнал — привід перевірити щитоподібну", w:{thy:2}},
+ ]},
+ { t:"Нервова система і настрій", h:"дрібні «глюки», які ми звикли ігнорувати", syms:[
+   {s:"Посмикується повіка", r:"мікросудоми — часта підказка про магній", w:{mg:3}},
+   {s:"Судоми литок, особливо вночі", w:{mg:3}},
+   {s:"Поколювання або оніміння в пальцях рук/ніг", w:{b12:3}},
+   {s:"Дратівливість «на рівному місці»", w:{mg:2,b12:1}},
+   {s:"Настрій помітно «сідає» восени та взимку", w:{d:2}},
+   {s:"Стало важче зосереджуватись і запам'ятовувати", w:{b12:2,fe:1,thy:1}},
+ ]},
+ { t:"Апетит і тяга", h:"чого просить (або вимагає) тіло", syms:[
+   {s:"Тягне на солодке, особливо ввечері", w:{mg:2,prot:1}},
+   {s:"Постійний голод: щойно поїла — знову хочу", w:{prot:2}},
+   {s:"Дуже хочеться саме шоколаду", w:{mg:2}},
+   {s:"Дивна тяга: гризти лід, крейду, нюхати крейду/бензин", r:"важливий сигнал — часто пов'язаний із залізом", w:{fe:3}},
+   {s:"Їжа стала менш смачною, нюх наче притупився", w:{zn:2}},
+ ]},
+ { t:"Імунітет і відновлення", h:"як тіло тримає оборону і лагодить себе", syms:[
+   {s:"Застуди частіше 3 разів на сезон", w:{d:2,zn:2,c:1}},
+   {s:"Ранки та подряпини гояться повільно", w:{zn:2,c:2,prot:1}},
+   {s:"Після хвороби відновлююсь довго і важко", w:{d:1,prot:1}},
+   {s:"Ниючий біль або ломота в кістках, попереку", w:{d:2}},
+   {s:"Набряки: обличчя зранку або ноги ввечері", r:"якщо стійкі — див. «Червоні прапорці» Дня 16", w:{prot:1,thy:1}},
+ ]},
+ { t:"Гідратація і травлення", h:"найпростіше — і найчастіше забуте", syms:[
+   {s:"Головний біль, що наростає ближче до вечора", w:{h2o:2,mg:1}},
+   {s:"Сеча темна; помічаю, що п'ю зовсім мало", w:{h2o:3}},
+   {s:"Сухість губ, сухість очей", w:{h2o:1,fat:1}},
+   {s:"Закрепи — кишківник «лінується»", w:{h2o:1,mg:1}},
+ ]},
+];
+
+const DEFS = {
+ fe:  {name:"Залізо (феритин)", check:"Феритин + залізо, загальний аналіз крові — усе вже в переліку Дня 7.",
+       food:"червоне м'ясо, печінка, бобові — і до них щось із вітаміном С (перець, ківі): так залізо засвоюється краще. У конструкторі (Д18) — страви з позначкою ★Fe."},
+ d:   {name:"Вітамін D", check:"Аналіз 25-OH вітамін D — у переліку Дня 7. У нашому кліматі дефіцит — дуже поширена історія.",
+       food:"жирна риба, яйця, і чесно: їжею D добирається важко — тому спершу аналіз, а дозу добавки (якщо потрібна) визначає лікар."},
+ b12: {name:"Вітамін B12 / фолат", check:"B12 + фолієва кислота — попроси лікаря додати до базового переліку Дня 7. Особливо важливо, якщо їси мало м'яса.",
+       food:"м'ясо, риба, яйця, молочне. Вегетаріанкам — обов'язково обговорити з лікарем."},
+ mg:  {name:"Магній", check:"Магній крові — у переліку Дня 7 (лікар підкаже, наскільки він показовий у твоєму випадку).",
+       food:"горіхи, гречка, банани, темний шоколад (легально!). Добавку — форму і дозу — тільки з лікарем, особливо якщо є проблеми з нирками."},
+ c:   {name:"Вітамін C", check:"Окремий аналіз роблять рідко — лікар оцінює за симптомами і раціоном. Кровоточиві ясна — також привід до стоматолога: перевірити, чи це не про ясна самі.",
+       food:"болгарський перець (чемпіон!), ківі, цитруси, квашена капуста, ягоди. Вітамін С руйнується при варінні — тож частина овочів свіжими."},
+ fat: {name:"Корисні жири / омега-3", check:"Спеціальний аналіз зазвичай не потрібен — спершу чесна ревізія тарілки: чи є там жири щодня?",
+       food:"олія в салат щодня, жменя горіхів, авокадо, жирна риба 2 рази на тиждень. Це та сама «+ трохи жиру» з тарілки Дня 6."},
+ prot:{name:"Білок", check:"Аналіз не потрібен — потрібна перевірка тарілки: чи стоїть білок у КОЖНОМУ основному прийомі?",
+       food:"яйця, м'ясо, риба, сир, бобові. У конструкторі (Д18) — позначка ★Б. Постійний голод найчастіше просить саме білка."},
+ zn:  {name:"Цинк", check:"Цинк крові — за призначенням лікаря, якщо симптомів кілька.",
+       food:"гарбузове насіння, м'ясо, морепродукти, яйця, кунжут."},
+ thy: {name:"Щитоподібна залоза — перевірити", check:"Це не «дефіцит, який заїдається їжею». Це привід здати ТТГ + вільний Т4 (уже в переліку Дня 7) і показати результат лікарю.",
+       food:"до результатів аналізу — нічого не «підкручуй» їжею чи йодом самостійно: тут легко нашкодити. Спершу ТТГ, потім лікар.", special:true},
+ h2o: {name:"Вода (гідратація)", check:"Аналіз не потрібен — «перевіряється склянкою». Орієнтир із Дня 1: ~30 мл × кг (нирки/серце/тиск → об'єм узгодь із лікарем).",
+       food:"пляшка на видному місці + ранкова склянка як ритуал. Колір сечі — твій щоденний індикатор: світло-солом'яний = все добре."},
+};
+
+/* ---------- СТАН ---------- */
+let gi = 0;
+let picked = GROUPS.map(g => g.syms.map(() => false));
+
+/* ---------- КВІТКА ---------- */
+function drawPetals(id, n){
+  const g = document.getElementById(id); if(!g) return;
+  g.innerHTML = "";
+  for(let i=0;i<7;i++){
+    const angle = i*(360/7)-90;
+    const p = document.createElementNS("http://www.w3.org/2000/svg","ellipse");
+    p.setAttribute("cx",60); p.setAttribute("cy",34);
+    p.setAttribute("rx",13); p.setAttribute("ry",25);
+    p.setAttribute("transform",`rotate(${angle+90} 60 60)`);
+    p.setAttribute("class","petal"+(i<n?" bloomed":""));
+    g.appendChild(p);
+  }
+}
+function refreshFlower(){
+  drawPetals("petals0",0);
+  drawPetals("petals1",gi);
+  drawPetals("petals2",7);
+}
+
+/* ---------- НАВІГАЦІЯ ---------- */
+function go(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo({top:0});
+}
+function startTest(){ gi = 0; renderG(); go("s-group"); }
+
+function renderG(){
+  const g = GROUPS[gi];
+  document.getElementById("gCount").textContent = `Група ${gi+1} із 7`;
+  document.getElementById("gTitle").textContent = g.t;
+  document.getElementById("gHint").textContent = g.h;
+  const list = document.getElementById("symList"); list.innerHTML = "";
+  g.syms.forEach((sym, i)=>{
+    const b = document.createElement("button");
+    b.className = "sym" + (picked[gi][i] ? " picked":"");
+    b.innerHTML = `<span class="mark">${picked[gi][i]?"✓":""}</span><span>${sym.s}${sym.r?`<span class="rare">↳ ${sym.r}</span>`:""}</span>`;
+    b.onclick = ()=>{ picked[gi][i] = !picked[gi][i]; renderG(); };
+    list.appendChild(b);
+  });
+  document.getElementById("btnBack").style.visibility = gi===0 ? "hidden":"visible";
+  document.getElementById("btnNext").textContent = gi===6 ? "Мої гіпотези 🌸" : "Далі";
+  const total = picked.flat().filter(Boolean).length;
+  document.getElementById("totalPicked").textContent = total;
+  refreshFlower();
+}
+function nextG(){ if(gi<6){ gi++; renderG(); } else showResults(); }
+function prevG(){ if(gi>0){ gi--; renderG(); } }
+
+/* ---------- РЕЗУЛЬТАТИ ---------- */
+function showResults(){
+  const scores = {}; const matched = {};
+  Object.keys(DEFS).forEach(k=>{ scores[k]=0; matched[k]=[]; });
+  GROUPS.forEach((g,gix)=>g.syms.forEach((sym,i)=>{
+    if(!picked[gix][i]) return;
+    Object.entries(sym.w).forEach(([k,w])=>{
+      scores[k]+=w; matched[k].push(sym.s);
+    });
+  }));
+  const totalPicked = picked.flat().filter(Boolean).length;
+  const res = document.getElementById("results"); res.innerHTML = "";
+  const hint = document.getElementById("resHint");
+
+  if(totalPicked===0){
+    res.innerHTML = `<div class="hyp mid"><div class="hyp-name">Виразних гіпотез немає — і це чудово 🌿</div>
+      <div class="hyp-row" style="margin-top:8px">Ти не позначила жодного стійкого симптому. Це не означає, що аналізи з Дня 7 не потрібні — базова перевірка раз на рік корисна всім. Але тіло, схоже, зараз ні про що не кричить. Подякуй йому — і продовжуй те, що робиш 💛</div></div>`;
+    hint.textContent = "";
+    refreshFlower(); go("s-result"); return;
+  }
+
+  const ranked = Object.entries(scores)
+    .filter(([k,v])=>v>0)
+    .sort((a,b)=>b[1]-a[1]);
+
+  const strong = ranked.filter(([k,v])=>v>=4);
+  const mid    = ranked.filter(([k,v])=>v>=2 && v<4);
+  const low    = ranked.filter(([k,v])=>v===1);
+
+  function card(k, v, cls, label){
+    const d = DEFS[k];
+    const syms = matched[k].slice(0,4).map(s=>"«"+s+"»").join(" · ") + (matched[k].length>4 ? ` · +ще ${matched[k].length-4}` : "");
+    return `<div class="hyp ${cls}${d.special?" thy":""}">
+      <div class="hyp-head"><div class="hyp-name">${d.name}</div><div class="hyp-level">${label}</div></div>
+      <div class="hyp-syms">Твої позначки: ${syms}</div>
+      <div class="hyp-row"><b>${d.special ? "Що зробити" : "Який аналіз перевіряє"}</b>${d.check}</div>
+      <div class="hyp-row"><b>${d.special ? "Важливо" : "Що підтримує в тарілці"}</b>${d.food}</div>
+    </div>`;
+  }
+
+  let html = "";
+  strong.forEach(([k,v])=> html += card(k,v,"","сильна гіпотеза"));
+  mid.forEach(([k,v])=> html += card(k,v,"mid","варто перевірити"));
+  if(low.length){
+    html += `<div class="divider"></div><div style="font-size:12px;color:var(--ink-soft);text-align:center;margin-bottom:2px">Слабкі сигнали (по одній позначці) — просто тримай у полі зору:</div>`;
+    html += `<div class="hyp low"><div class="hyp-row" style="margin-top:0">${low.map(([k])=>DEFS[k].name).join(" · ")}</div></div>`;
+  }
+  res.innerHTML = html;
+
+  hint.innerHTML = strong.length
+    ? "Сильні гіпотези — це готові перші питання для лікаря. Зроби скріншот 📸 і візьми з собою на прийом разом із «Портретом» Дня 7."
+    : "Виразних «сильних» гіпотез немає — але позначене варто тримати в полі зору і перевірити базовими аналізами Дня 7.";
+
+  refreshFlower();
+  go("s-result");
+}
+
+function restart(){
+  gi = 0;
+  picked = GROUPS.map(g => g.syms.map(() => false));
+  refreshFlower();
+  go("s-intro");
+}
+drawPetals("petals0",0);
+</script>
+</body>
+</html>
